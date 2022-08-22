@@ -1,14 +1,23 @@
 <template>
-  <v-sheet width="275">
-    <v-select
-      v-model="select"
-      @change="update()"
-      :items="items"
-      outlined
-      dense
-      hide-details
-      label="カタログから検索"
-    ></v-select>
+  <v-sheet>
+    <v-row>
+      <v-col cols="3"
+        ><v-select
+          v-model="select"
+          @change="update()"
+          :items="items"
+          outlined
+          dense
+          hide-details
+          label="カタログで検索する"
+        ></v-select
+      ></v-col>
+      <v-col cols="6"
+        ><v-alert v-if="select.length > 0" dense color="red lighten-2" dark>
+          {{ select }}を表示中
+        </v-alert></v-col
+      >
+    </v-row>
   </v-sheet>
 </template>
 
