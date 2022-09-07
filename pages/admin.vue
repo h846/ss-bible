@@ -16,32 +16,53 @@
               <v-container>
                 <v-row>
                   <v-col cols="12" sm="6" md="4">
-                    <v-text-field label="Catalog Code" required></v-text-field>
+                    <v-text-field
+                      label="Catalog Code"
+                      v-model="newItem.CAT_CODE"
+                      required
+                    ></v-text-field>
                   </v-col>
                   <v-col cols="12" sm="6" md="4">
-                    <v-text-field label="Catalog Name"></v-text-field>
+                    <v-text-field
+                      label="Catalog Name"
+                      v-model="newItem.CAT_NAME"
+                    ></v-text-field>
                   </v-col>
                   <v-col cols="12" sm="6" md="4">
                     <v-text-field
                       label="Catalog Page"
-                      persistent-hint
-                      required
+                      v-model="newItem.CAT_PAGE"
                     ></v-text-field>
                   </v-col>
-                  <v-col cols="4">
-                    <v-text-field label="Item Location" required></v-text-field>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-text-field
+                      label="Item Location"
+                      v-model="newItem.CAT_COM"
+                    ></v-text-field>
                   </v-col>
-                  <v-col cols="4">
-                    <v-text-field label="Style#" required></v-text-field>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-text-field
+                      label="Style#"
+                      v-model="newItem.PRD_STYLE"
+                    ></v-text-field>
                   </v-col>
-                  <v-col cols="4">
-                    <v-text-field label="Item Name" required></v-text-field>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-text-field
+                      label="Item Name"
+                      v-model="newItem.PRD_NAME"
+                    ></v-text-field>
                   </v-col>
-                  <v-col cols="6">
-                    <v-text-field label="Color Code" required></v-text-field>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-text-field
+                      label="Color Code"
+                      v-model="newItem.PRD_COLOR_CODE"
+                    ></v-text-field>
                   </v-col>
-                  <v-col cols="6">
-                    <v-text-field label="Color Name" required></v-text-field>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-text-field
+                      label="Color Name"
+                      v-model="newItem.PRD_COLOR_NAME"
+                    ></v-text-field>
                   </v-col>
                 </v-row>
               </v-container>
@@ -51,7 +72,7 @@
               <v-btn color="blue darken-1" text @click="createDialog = false">
                 Close
               </v-btn>
-              <v-btn color="blue darken-1" text @click=""> Save </v-btn>
+              <v-btn color="blue darken-1" text @click="addNew()"> Save </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -124,6 +145,10 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-overlay :value="loading">
+      <p>データ取得中</p>
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
   </v-container>
 </template>
 
@@ -141,9 +166,20 @@ export default {
         { text: '他の掲載カタログ', value: 'ALT_CAT_NAME' },
         { text: '削除', value: 'actions', sortable: false },
       ],
+      newItem: {
+        CAT_CODE: '',
+        CAT_NAME: '',
+        CAT_PAGE: '',
+        CAT_COM: '',
+        PRD_STYLE: '',
+        PRD_NAME: '',
+        PRD_COLOR_CODE: '',
+        PRD_COLOR_NAME: '',
+      },
       deleteItemID: null,
       deleteDialog: false,
       createDialog: false,
+      loading: false,
     }
   },
   computed: {
@@ -152,7 +188,10 @@ export default {
     },
   },
   created() {
-    this.$store.dispatch('fetchData')
+    this.loading = true
+    this.$store.dispatch('fetchData').then((res) => {
+      this.loading = false
+    })
     this.$store.dispatch('fetchCatalogData')
   },
   methods: {
@@ -161,6 +200,7 @@ export default {
       this.deleteItemID = id
     },
     async deleteItem() {
+      this.loading = true
       const id = this.deleteItemID
       const sql = `DELETE FROM CSNET.SS_BIBLE WHERE ID = ${id}`
       await axios
@@ -168,7 +208,23 @@ export default {
         .then((res) => {
           this.$store.dispatch('fetchData').then((res) => {
             this.deleteDialog = false
+            this.loading = false
           })
+        })
+    },
+    async addNew() {
+      const cols = `(CAT_CODE,CAT_NAME,CAT_PAGE,CAT_COM,PRD_STYLE,PRD_NAME,PRD_COLOR_CODE,PRD_COLOR_NAME)`
+      let vals = Object.values(this.newItem)
+      vals = vals.reduce((a, b) => {
+        return `${a},` + `'${b}'`
+      })
+      vals = `(${vals})`
+      let sql = `INSERT INTO CSNET.SS_BIBLE ${cols} VALUES ${vals}`
+      console.log(sql)
+      await axios
+        .post('http://lejnet/api-test/csnet/ss-bible', { sql })
+        .then((res) => {
+          this.createDialog = false
         })
     },
   },
